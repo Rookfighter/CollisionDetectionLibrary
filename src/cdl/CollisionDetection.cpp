@@ -1,12 +1,12 @@
 #include <cmath>
-#include "CollisionDetection.hpp"
+#include "cdl/CollisionDetection.hpp"
 
 /* Formula of line intersection:
  * u1 = LINE1_INTERSECT_FAC(l1, l2) / LINE_INTERSECT_DENOM(l1, l2)
  * u2 = LINE2_INTERSECT_FAC(l1, l2) / LINE_INTERSECT_DENOM(l1, l2)
  * u1 and u2 are used as factors to calculate intersection point */
-#define LINE_INTERSECT_DENOM(l1,l2) (((l2.point2.y - l2.point1.y) * (l1.point2.x - l1.point1.x)) - \
-									 ((l2.point2.x - l2.point1.x) * (l1.point2.y - l1.point1.y)))
+#define LINE_INTERSECT_DENOM(l1, l2) (((l2.point2.y - l2.point1.y) * (l1.point2.x - l1.point1.x)) - \
+									  ((l2.point2.x - l2.point1.x) * (l1.point2.y - l1.point1.y)))
 #define LINE1_INTERSECT_FAC(l1, l2) (((l2.point2.x - l2.point1.x) * (l1.point1.y - l2.point1.y)) - \
 									 ((l2.point2.y - l2.point1.y) * (l1.point1.x - l2.point1.x)))
 #define LINE2_INTERSECT_FAC(l1, l2) (((l1.point2.x - l1.point1.x) * (l1.point1.y - l2.point1.y)) - \
@@ -23,13 +23,19 @@ namespace cdl
 	
 	bool collideCircles(Circle &p_circle1, Circle &p_circle2, std::vector<Vec2> &p_intersectionPoints)
 	{
-		p_intersectionPoints.clear();
 		// vector from mid1 to mid2
 		Vec2 directionVec = p_circle2.mid - p_circle1.mid;
 		float sqDistance = directionVec.lengthSQ();
+		float sqRadiusSum = (p_circle1.radius + p_circle2.radius) * (p_circle1.radius + p_circle2.radius);
 		// square of radius sum is higher than square distance between mids
-		if((p_circle1.radius + p_circle2.radius) * (p_circle1.radius + p_circle2.radius) > sqDistance)
+		if(sqRadiusSum < sqDistance)
 			return false;
+		
+		// tangent each other
+		if(sqRadiusSum == sqDistance) {
+			p_intersectionPoints.push_back(p_circle1.mid + (directionVec * p_circle1.radius));
+			return true;
+		}
 		
 		// distance from circle1 to radicalLine
 		float distance1 = (sqDistance + p_circle1.radius * p_circle1.radius - p_circle2.radius * p_circle2.radius) / sqrt(sqDistance);
@@ -42,7 +48,6 @@ namespace cdl
 	
 	bool collideLines(Line &p_line1, Line &p_line2, std::vector<Vec2> &p_intersectionPoints)
 	{
-		p_intersectionPoints.clear();
 		// denominator of formula for line intersection
 		float denominator = LINE_INTERSECT_DENOM(p_line1, p_line2);
 		if(denominator == 0)
@@ -57,7 +62,6 @@ namespace cdl
 	
 	bool collideLineSegments(Line &p_line1, Line &p_line2, std::vector<Vec2> &p_intersectionPoints)
 	{
-		p_intersectionPoints.clear();
 		// denominator of formula for line intersection
 		float denominator = LINE_INTERSECT_DENOM(p_line1, p_line2);
 		if(denominator == 0)
@@ -77,8 +81,6 @@ namespace cdl
 	
 	bool collideLineCircle(Line &p_line, Circle &p_circle, std::vector<Vec2> &p_intersectionPoints)
 	{
-		p_intersectionPoints.clear();
-		
 		Vec2 localPoint1 = p_line.point1 - p_circle.mid;
 		Vec2 localPoint2 = p_line.point2 - p_circle.mid;
 		// direction vector of the line
@@ -110,8 +112,6 @@ namespace cdl
 	
 	bool collideLineSegmentCircle(Line &p_line, Circle &p_circle, std::vector<Vec2> &p_intersectionPoints)
 	{
-		p_intersectionPoints.clear();
-		
 		Vec2 localPoint1 = p_line.point1 - p_circle.mid;
 		Vec2 localPoint2 = p_line.point2 - p_circle.mid;
 		// direction vector of the line

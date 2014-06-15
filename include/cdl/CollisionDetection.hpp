@@ -2,8 +2,8 @@
 #define CDL_COLLISION_DETECTION_HPP
 
 #include <vector>
-#include "Circle.hpp"
-#include "Line.hpp"
+#include "cdl/Circle.hpp"
+#include "cdl/Line.hpp"
 
 namespace cdl
 {

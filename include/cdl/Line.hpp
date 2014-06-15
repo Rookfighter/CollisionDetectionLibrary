@@ -1,7 +1,7 @@
 #ifndef CDL_LINE_HPP
 #define CDL_LINE_HPP
 
-#include "Vec2.hpp"
+#include "cdl/Vec2.hpp"
 
 namespace cdl
 {
