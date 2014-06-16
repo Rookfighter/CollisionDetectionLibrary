@@ -1,6 +1,5 @@
 #include <UnitTest++.h>
 #include <cdl/cdl.hpp>
-#include <cdl/Utils.hpp>
 #include <vector>
 
 SUITE(CollisionDetection)
@@ -82,21 +81,181 @@ SUITE(CollisionDetection)
 		ret = cdl::collideLines(l1, l2, intersectionPoints);
 		// lines should intersect
 		CHECK(ret);
-		CHECK(intersectionPoints.size() == 1)
+		CHECK(intersectionPoints.size() == 1);
+		
+		//decreasing
+		l1.point1.x = 0;
+		l1.point1.y = 2;
+		l1.point2.x = 3;
+		l1.point2.y = -1;
+		
+		//lines would cross, line segments should not
+		l2.point1.x = 0;
+		l2.point1.y = -4;
+		l2.point2.x = 9;
+		l2.point2.y = 1;
+		
+		intersectionPoints.clear();
+		ret = cdl::collideLines(l1, l2, intersectionPoints);
+		// lines intersect
+		CHECK(ret);
+		CHECK(intersectionPoints.size() == 1);
 	}
 	
 	TEST(LineSegmentCollision)
 	{
+		cdl::Line l1, l2;
+		std::vector<cdl::Vec2> intersectionPoints;
+		bool ret;
 		
+		//decreasing
+		l1.point1.x = 0;
+		l1.point1.y = 2;
+		l1.point2.x = 3;
+		l1.point2.y = -1;
+		
+		//parallel
+		l2.point1.x = 3;
+		l2.point1.y = 2;
+		l2.point2.x = 6;
+		l2.point2.y = -1;
+		
+		intersectionPoints.clear();
+		ret = cdl::collideLineSegments(l1, l2, intersectionPoints);
+		// lineSegments should be parallel, no intersection
+		CHECK(!ret);
+		CHECK(intersectionPoints.empty());
+		
+		//decreasing
+		l1.point1.x = 0;
+		l1.point1.y = 2;
+		l1.point2.x = 3;
+		l1.point2.y = -1;
+		
+		//changed x values -> should be perpendicular
+		l2.point1.x = 3;
+		l2.point1.y = 2;
+		l2.point2.x = 0;
+		l2.point2.y = -1;
+		
+		intersectionPoints.clear();
+		ret = cdl::collideLineSegments(l1, l2, intersectionPoints);
+		// lineSegments intersect
+		CHECK(ret);
+		CHECK(intersectionPoints.size() == 1);
+		
+		//decreasing
+		l1.point1.x = 0;
+		l1.point1.y = 2;
+		l1.point2.x = 3;
+		l1.point2.y = -1;
+		
+		//lines would cross, line segments should not
+		l2.point1.x = 0;
+		l2.point1.y = -4;
+		l2.point2.x = 9;
+		l2.point2.y = 1;
+		
+		intersectionPoints.clear();
+		ret = cdl::collideLineSegments(l1, l2, intersectionPoints);
+		// lineSegments dont intersect
+		CHECK(!ret);
+		CHECK(intersectionPoints.empty());
 	}
 	
 	TEST(lineCircleCollision)
 	{
+		cdl::Line l;
+		cdl::Circle c;
+		std::vector<cdl::Vec2> intersectionPoints;
+		bool ret;
 		
+		c.mid.x = 0;
+		c.mid.y = 0;
+		c.radius = 2;
+		
+		l.point1.set(-6, -5);
+		l.point2.set(-2,-2);
+		
+		intersectionPoints.clear();
+		ret = cdl::collideLineCircle(l, c, intersectionPoints);
+		// lineSegments dont intersect, but lines should
+		CHECK(ret);
+		CHECK(intersectionPoints.size() == 2);
+		
+		l.point1.set(-1, -4);
+		l.point2.set(4,-2);
+		
+		intersectionPoints.clear();
+		ret = cdl::collideLineCircle(l, c, intersectionPoints);
+		// line should not intersect
+		CHECK(!ret);
+		CHECK(intersectionPoints.empty());
+		
+		l.point1.set(-2, 2);
+		l.point2.set(4, 2);
+		
+		intersectionPoints.clear();
+		ret = cdl::collideLineCircle(l, c, intersectionPoints);
+		// line should tangent circle
+		CHECK(ret);
+		CHECK(intersectionPoints.size() == 1);
 	}
 	
 	TEST(lineSegmentCircleCollision)
 	{
+		cdl::Line l;
+		cdl::Circle c;
+		std::vector<cdl::Vec2> intersectionPoints;
+		bool ret;
 		
+		c.mid.x = 0;
+		c.mid.y = 0;
+		c.radius = 2;
+		
+		l.point1.set(-6, -5);
+		l.point2.set(-2,-2);
+		
+		intersectionPoints.clear();
+		ret = cdl::collideLineSegmentCircle(l, c, intersectionPoints);
+		// lineSegments dont intersect, but lines should
+		CHECK(!ret);
+		CHECK(intersectionPoints.empty());
+		
+		l.point1.set(-2, -2);
+		l.point2.set(2, 1);
+		
+		intersectionPoints.clear();
+		ret = cdl::collideLineSegmentCircle(l, c, intersectionPoints);
+		// lineSegments should intersect 2 times
+		CHECK(ret);
+		CHECK(intersectionPoints.size() == 2);
+		
+		l.point1.set(-2, -2);
+		l.point2.set(0, 0);
+		
+		intersectionPoints.clear();
+		ret = cdl::collideLineSegmentCircle(l, c, intersectionPoints);
+		// lineSegments should intersect only 1 time
+		CHECK(ret);
+		CHECK(intersectionPoints.size() == 1);
+		
+		l.point1.set(-1, -4);
+		l.point2.set(4,-2);
+		
+		intersectionPoints.clear();
+		ret = cdl::collideLineSegmentCircle(l, c, intersectionPoints);
+		// lineSegments should not intersect
+		CHECK(!ret);
+		CHECK(intersectionPoints.empty());
+		
+		l.point1.set(-2, 2);
+		l.point2.set(4, 2);
+		
+		intersectionPoints.clear();
+		ret = cdl::collideLineCircle(l, c, intersectionPoints);
+		// lineSegment should tangent circle
+		CHECK(ret);
+		CHECK(intersectionPoints.size() == 1);
 	}
 }

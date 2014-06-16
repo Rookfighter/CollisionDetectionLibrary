@@ -3,6 +3,12 @@
 
 namespace cdl
 {
+	void Vec2::set(const float p_x, const float p_y)
+	{
+		x = p_x;
+		y = p_y;
+	}
+	
 	float Vec2::lengthSQ() const
 	{
 		return x * x + y * y;

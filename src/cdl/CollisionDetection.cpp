@@ -93,7 +93,7 @@ namespace cdl
 		//no intersection
 		if (delta < 0)
 			return false;
-		// one intersection
+		// one intersection, tangent
 		else if (delta == 0) {
 			float u = -b / (2 * a);
 			p_intersectionPoints.push_back(p_line.point1 + (u * diffP2P1));
@@ -124,7 +124,7 @@ namespace cdl
 		//no intersection
 		if (delta < 0)
 			return false;
-		// one intersection
+		// one intersection, tangent
 		else if (delta == 0) {
 			float u = -b / (2 * a);
 			// is not on the line segment
@@ -140,7 +140,7 @@ namespace cdl
 			float u1 = (-b + sqrtDelta) / (2 * a);
 			float u2 = (-b - sqrtDelta) / (2 * a);
 			
-			if(u1 < 0  || u1 > 1 || u2 < 0 || u2 > 1)
+			if((u1 < 0  || u1 > 1) && (u2 < 0 || u2 > 1))
 				return false;
 			
 			if(u1 >= 0  && u1 <= 1)

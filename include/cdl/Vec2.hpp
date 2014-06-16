@@ -15,6 +15,7 @@ namespace cdl
 		Vec2(float p_x, float p_y): x(p_x), y(p_y) { }
 		~Vec2() { }
 		
+		void set(const float p_x, const float p_y);
 		float lengthSQ() const;
 		float length() const;
 		Vec2 perpendicular() const;

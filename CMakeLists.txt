@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 project(cdl)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/modules/")
-find_package(UnitTest++)
-
 file(GLOB CDL_SRC "src/cdl/*.hpp" "src/cdl/*.cpp")
 include_directories(include)
 add_library(cdl ${CDL_SRC} ${CDL_INCLUDE})
