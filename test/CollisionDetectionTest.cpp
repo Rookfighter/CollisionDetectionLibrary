@@ -1,5 +1,6 @@
 #include <UnitTest++.h>
 #include <cdl/cdl.hpp>
+#include <cdl/Utils.hpp>
 #include <vector>
 
 SUITE(CollisionDetection)
@@ -161,6 +162,24 @@ SUITE(CollisionDetection)
 		// lineSegments dont intersect
 		CHECK(!ret);
 		CHECK(intersectionPoints.empty());
+		
+		//this is a line
+		l1.point1.x = 2;
+		l1.point1.y = 1;
+		l1.point2.x = 6;
+		l1.point2.y = -1;
+		
+		//this is a line segment
+		l2.point1.x = -2;
+		l2.point1.y = 1;
+		l2.point2.x = 2;
+		l2.point2.y = 4;
+		
+		intersectionPoints.clear();
+		ret = cdl::collideLineLineSegment(l1, l2, intersectionPoints);
+		// line and lineSegment should collide
+		CHECK(ret);
+		CHECK(intersectionPoints.size() == 1);
 	}
 	
 	TEST(lineCircleCollision)
@@ -257,5 +276,38 @@ SUITE(CollisionDetection)
 		// lineSegment should tangent circle
 		CHECK(ret);
 		CHECK(intersectionPoints.size() == 1);
+	}
+	
+	TEST(PolygonCollision)
+	{
+		cdl::Polygon p1, p2;
+		std::vector<cdl::Vec2> intersectionPoints;
+		bool ret;
+		
+		p1.corners.push_back(cdl::Vec2(-3, 1));
+		p1.corners.push_back(cdl::Vec2(-1, 1));
+		p1.corners.push_back(cdl::Vec2(-1, -1));
+		p1.corners.push_back(cdl::Vec2(-3, -1));
+		
+		p2.corners.push_back(cdl::Vec2(1, 0));
+		p2.corners.push_back(cdl::Vec2(2, 1));
+		p2.corners.push_back(cdl::Vec2(3, 1));
+		p2.corners.push_back(cdl::Vec2(3, -1));
+		p2.corners.push_back(cdl::Vec2(2, -1));
+		
+		intersectionPoints.clear();
+		ret = cdl::collidePolygons(p1, p2, intersectionPoints);
+		//polygons should not collide
+		CHECK(!ret);
+		CHECK(intersectionPoints.empty());
+		
+		for(int i = 0; i < p2.corners.size(); ++i)
+			p2.corners[i] += cdl::Vec2(-3, 1);
+			
+		intersectionPoints.clear();
+		ret = cdl::collidePolygons(p1, p2, intersectionPoints);
+		//polygons should collide in 2 points
+		CHECK(ret);
+		CHECK(intersectionPoints.size() == 2);
 	}
 }

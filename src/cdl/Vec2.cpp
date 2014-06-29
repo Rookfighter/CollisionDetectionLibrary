@@ -21,7 +21,7 @@ namespace cdl
 	
 	Vec2 Vec2::perpendicular() const
 	{
-		return Vec2(x, -y);
+		return Vec2(-y, x);
 	}
 	
 	Vec2& Vec2::operator+=(Vec2 const& p_vec)
@@ -102,7 +102,5 @@ namespace cdl
 	{
 		return !(p_vec1 == p_vec2);
 	}
-
-
 }
 

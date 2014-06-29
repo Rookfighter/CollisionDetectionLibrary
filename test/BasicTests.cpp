@@ -36,5 +36,11 @@ SUITE(BasicTests)
 		CHECK(v1.x == -4 && v1.y == -2);
 		v1-= v2;
 		CHECK(v1.x == -10 && v1.y == -5);
+		
+		float dir1 = std::atan2(v1.y, v1.x);
+		v1 = v1.perpendicular();
+		float dir2 = std::atan2(v1.y, v1.x);
+		
+		CHECK(cdl::equal((dir2 - dir1), (M_PI / 2), 4));
 	}
 }

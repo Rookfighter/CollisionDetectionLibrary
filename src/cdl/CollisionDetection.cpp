@@ -1,5 +1,7 @@
 #include <cmath>
+#include <algorithm>
 #include "cdl/CollisionDetection.hpp"
+#include "cdl/Utils.hpp"
 
 /* Formula of line intersection:
  * u1 = LINE1_INTERSECT_FAC(l1, l2) / LINE_INTERSECT_DENOM(l1, l2)
@@ -20,8 +22,19 @@
 
 namespace cdl
 {
+	static void unique(std::vector<Vec2> p_points)
+	{
+		for(int i = 0; i < p_points.size(); ++i) {
+			for(int j = i; j < p_points.size(); ++j) {
+				if(p_points[i] == p_points[j]) {
+					p_points.erase(p_points.begin() + j);
+					--j;
+				}
+			}
+		}
+	}
 	
-	bool collideCircles(Circle &p_circle1, Circle &p_circle2, std::vector<Vec2> &p_intersectionPoints)
+	bool collideCircles(const Circle &p_circle1, const Circle &p_circle2, std::vector<Vec2> &p_intersectionPoints)
 	{
 		// vector from mid1 to mid2
 		Vec2 directionVec = p_circle2.mid - p_circle1.mid;
@@ -30,23 +43,24 @@ namespace cdl
 		// square of radius sum is higher than square distance between mids
 		if(sqRadiusSum < sqDistance)
 			return false;
+			
+		float circleDist = sqrt(sqDistance);
 		
 		// tangent each other
 		if(sqRadiusSum == sqDistance) {
-			p_intersectionPoints.push_back(p_circle1.mid + (directionVec * p_circle1.radius));
+			p_intersectionPoints.push_back(p_circle1.mid + ((directionVec / circleDist) * p_circle1.radius));
 			return true;
 		}
 		
 		// distance from circle1 to radicalLine
-		float distance1 = (sqDistance + p_circle1.radius * p_circle1.radius - p_circle2.radius * p_circle2.radius) / sqrt(sqDistance);
-		// points of radical line
-		Vec2 radicalPoint1 = p_circle1.mid + (directionVec * distance1);
+		float distance1 = (sqDistance + p_circle1.radius * p_circle1.radius - p_circle2.radius * p_circle2.radius) / (2 * circleDist);
+		// points of radical line, have to normalize direction vec
+		Vec2 radicalPoint1 = p_circle1.mid + ((directionVec / circleDist) * distance1);
 		Vec2 radicalPoint2 = radicalPoint1 + directionVec.perpendicular();
-		Line radicalLine(radicalPoint1, radicalPoint2);
-		return collideLineCircle(radicalLine, p_circle1, p_intersectionPoints);
+		return collideLineCircle(Line(radicalPoint1, radicalPoint2), p_circle1, p_intersectionPoints);
 	}
 	
-	bool collideLines(Line &p_line1, Line &p_line2, std::vector<Vec2> &p_intersectionPoints)
+	bool collideLines(const Line &p_line1, const Line &p_line2, std::vector<Vec2> &p_intersectionPoints)
 	{
 		// denominator of formula for line intersection
 		float denominator = LINE_INTERSECT_DENOM(p_line1, p_line2);
@@ -60,7 +74,7 @@ namespace cdl
 		return true;
 	}
 	
-	bool collideLineSegments(Line &p_line1, Line &p_line2, std::vector<Vec2> &p_intersectionPoints)
+	bool collideLineSegments(const Line &p_line1, const Line &p_line2, std::vector<Vec2> &p_intersectionPoints)
 	{
 		// denominator of formula for line intersection
 		float denominator = LINE_INTERSECT_DENOM(p_line1, p_line2);
@@ -79,7 +93,24 @@ namespace cdl
 		return true;
 	}
 	
-	bool collideLineCircle(Line &p_line, Circle &p_circle, std::vector<Vec2> &p_intersectionPoints)
+	bool collideLineLineSegment(const Line &p_line, const Line &p_lineSegment, std::vector<Vec2> &p_intersectionPoints)
+	{
+		// denominator of formula for line intersection
+		float denominator = LINE_INTERSECT_DENOM(p_line, p_lineSegment);
+		if(denominator == 0)
+			return false;
+		float u = LINE2_INTERSECT_FAC(p_line, p_lineSegment) / denominator;
+		
+		// intersection point is not in between points of lineSegment
+		if (u < 0 || u > 1)
+			return false;
+			
+		// add intersection point
+		p_intersectionPoints.push_back(p_lineSegment.point1 + (u * (p_lineSegment.point2 - p_lineSegment.point1)));
+		return true;
+	}
+	
+	bool collideLineCircle(const Line &p_line, const Circle &p_circle, std::vector<Vec2> &p_intersectionPoints)
 	{
 		Vec2 localPoint1 = p_line.point1 - p_circle.mid;
 		Vec2 localPoint2 = p_line.point2 - p_circle.mid;
@@ -110,7 +141,7 @@ namespace cdl
 		return true;
 	}
 	
-	bool collideLineSegmentCircle(Line &p_line, Circle &p_circle, std::vector<Vec2> &p_intersectionPoints)
+	bool collideLineSegmentCircle(const Line &p_line, const Circle &p_circle, std::vector<Vec2> &p_intersectionPoints)
 	{
 		Vec2 localPoint1 = p_line.point1 - p_circle.mid;
 		Vec2 localPoint2 = p_line.point2 - p_circle.mid;
@@ -151,6 +182,86 @@ namespace cdl
 		}
 		
 		return true;
+	}
+	
+	bool collidePolygons(const Polygon &p_polygon1, const Polygon &p_polygon2, std::vector<Vec2> &p_intersectionPoints)
+	{
+		bool result = false;
+		int next;
+		std::vector<Vec2> resultList;
+		
+		for(int i = 0; i < p_polygon1.corners.size(); ++i) {
+			next = (i + 1) % p_polygon1.corners.size();
+			//collide all line segments of polygon1 with polygon 2
+			if(collideLineSegmentPolygon(Line(p_polygon1.corners[i], p_polygon1.corners[next]), p_polygon2, resultList))
+				result = true;
+		}
+		
+		// if collision is right on corner, there may be duplicates from each lineSegment of polygon
+		unique(resultList);
+		p_intersectionPoints.insert(p_intersectionPoints.end(), resultList.begin(), resultList.end());
+		
+		return result;
+	}
+	
+	bool collideLinePolygon(const Line &p_line, const Polygon &p_polygon, std::vector<Vec2> &p_intersectionPoints)
+	{
+		bool result = false;
+		int next;
+		std::vector<Vec2> resultList;
+		
+		for(int i = 0; i < p_polygon.corners.size(); ++i) {
+			next = (i + 1) % p_polygon.corners.size();
+			//collide all line segments of the polygon with the line
+			if(collideLineLineSegment(p_line, Line(p_polygon.corners[i], p_polygon.corners[next]), resultList))
+				result = true;
+		}
+		
+		// if collision is right on corner, there may be duplicates from each lineSegment of polygon
+		unique(resultList);
+		p_intersectionPoints.insert(p_intersectionPoints.end(), resultList.begin(), resultList.end());
+		
+		return result;
+	}
+	
+	bool collideLineSegmentPolygon(const Line &p_line, const Polygon &p_polygon, std::vector<Vec2> &p_intersectionPoints)
+	{
+		bool result = false;
+		int next;
+		std::vector<Vec2> resultList;
+		
+		for(int i = 0; i < p_polygon.corners.size(); ++i) {
+			next = (i + 1) % p_polygon.corners.size();
+			// collide all line segments of polygon with line segment
+			if(collideLineSegments(p_line, Line(p_polygon.corners[i], p_polygon.corners[next]), resultList))
+				result = true;
+		}
+		
+		// if collision is right on corner, there may be duplicates from each lineSegment of polygon
+		unique(resultList);
+		p_intersectionPoints.insert(p_intersectionPoints.end(), resultList.begin(), resultList.end());
+		
+		return result;
+	}
+	
+	bool collideCirclePolygon(const Circle &p_circle, const Polygon &p_polygon, std::vector<Vec2> &p_intersectionPoints)
+	{
+		bool result = false;
+		int next;
+		std::vector<Vec2> resultList;
+		
+		for(int i = 0; i < p_polygon.corners.size(); ++i) {
+			next = (i + 1) % p_polygon.corners.size();
+			//collide all line segments of polygon with circle
+			if(collideLineSegmentCircle(Line(p_polygon.corners[i], p_polygon.corners[next]), p_circle, resultList))
+				result = true;
+		}
+		
+		// if collision is right on corner, there may be duplicates from each lineSegment of polygon
+		unique(resultList);
+		p_intersectionPoints.insert(p_intersectionPoints.end(), resultList.begin(), resultList.end());
+		
+		return result;
 	}
 }
 

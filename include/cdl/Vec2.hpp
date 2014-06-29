@@ -33,7 +33,6 @@ namespace cdl
 	const Vec2 operator/(Vec2 const& p_vec, const float p_divisor);
 	bool operator==(Vec2 const& p_vec1, Vec2 const& p_vec2);
 	bool operator!=(Vec2 const& p_vec1, Vec2 const& p_vec2);
-	
 }
 
 #endif
