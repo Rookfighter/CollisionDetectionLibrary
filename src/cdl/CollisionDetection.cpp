@@ -34,151 +34,284 @@ namespace cdl
 		}
 	}
 	
+/*************************************************
+ * Collide Circles
+ *************************************************/
+	
+	typedef struct {
+		Vec2 M1M2;
+		float sqDist;
+		float sqRadSum;
+		bool collide;
+	} circleIntersection_t;
+	
+	static circleIntersection_t circlesIntersect(const Circle &p_circle1, const Circle &p_circle2)
+	{
+		circleIntersection_t result;
+		
+		// vector from mid1 to mid2
+		result.M1M2 = p_circle2.mid - p_circle1.mid;
+		result.sqDist = result.M1M2.lengthSQ();
+		result.sqRadSum = (p_circle1.radius + p_circle2.radius) * (p_circle1.radius + p_circle2.radius);
+		// distance is lower / euqal than radius sum
+		result.collide = result.sqDist <= result.sqRadSum;
+		
+		return result;
+	}
+	
+	bool collideCircles(const Circle &p_circle1, const Circle &p_circle2)
+	{
+		return circlesIntersect(p_circle1, p_circle2).collide;
+	}
+	
 	bool collideCircles(const Circle &p_circle1, const Circle &p_circle2, std::vector<Vec2> &p_intersectionPoints)
 	{
-		// vector from mid1 to mid2
-		Vec2 directionVec = p_circle2.mid - p_circle1.mid;
-		float sqDistance = directionVec.lengthSQ();
-		float sqRadiusSum = (p_circle1.radius + p_circle2.radius) * (p_circle1.radius + p_circle2.radius);
-		// square of radius sum is higher than square distance between mids
-		if(sqRadiusSum < sqDistance)
+		circleIntersection_t intersection = circlesIntersect(p_circle1, p_circle2);
+		if(!intersection.collide)
 			return false;
 			
-		float circleDist = sqrt(sqDistance);
+		float circleDist = sqrt(intersection.sqDist);
 		
 		// tangent each other
-		if(sqRadiusSum == sqDistance) {
-			p_intersectionPoints.push_back(p_circle1.mid + ((directionVec / circleDist) * p_circle1.radius));
+		if(intersection.sqRadSum == intersection.sqDist) {
+			p_intersectionPoints.push_back(p_circle1.mid + ((intersection.M1M2 / circleDist) * p_circle1.radius));
 			return true;
 		}
 		
 		// distance from circle1 to radicalLine
-		float distance1 = (sqDistance + p_circle1.radius * p_circle1.radius - p_circle2.radius * p_circle2.radius) / (2 * circleDist);
+		float distance1 = (intersection.sqDist + p_circle1.radius * p_circle1.radius - p_circle2.radius * p_circle2.radius) / (2 * circleDist);
 		// points of radical line, have to normalize direction vec
-		Vec2 radicalPoint1 = p_circle1.mid + ((directionVec / circleDist) * distance1);
-		Vec2 radicalPoint2 = radicalPoint1 + directionVec.perpendicular();
+		Vec2 radicalPoint1 = p_circle1.mid + ((intersection.M1M2 / circleDist) * distance1);
+		Vec2 radicalPoint2 = radicalPoint1 + intersection.M1M2.perpendicular();
 		return collideLineCircle(Line(radicalPoint1, radicalPoint2), p_circle1, p_intersectionPoints);
+	}
+	
+/*************************************************
+ * Collide Lines
+ *************************************************/
+	
+	typedef struct {
+		float denominator;
+		float u1;
+		float u2;
+		
+		bool collide;
+	} lineIntersection_t;
+	
+	static void linesIntersect(const Line &p_line1, const Line &p_line2, lineIntersection_t &p_result)
+	{
+		// denominator of formula for line intersection
+		p_result.denominator = LINE_INTERSECT_DENOM(p_line1, p_line2);
+		p_result.collide = p_result.denominator != 0;
+	}
+	
+	static void calculateLineIntersectionFactor(const Line &p_line1, const Line &p_line2, lineIntersection_t &p_result)
+	{
+		// factor to calculate resulting point with line 1
+		p_result.u1 = LINE1_INTERSECT_FAC(p_line1, p_line2) / p_result.denominator;
+	}
+	
+	bool collideLines(const Line &p_line1, const Line &p_line2)
+	{
+		lineIntersection_t intersect;
+		linesIntersect(p_line1, p_line2, intersect);
+		return intersect.collide;
 	}
 	
 	bool collideLines(const Line &p_line1, const Line &p_line2, std::vector<Vec2> &p_intersectionPoints)
 	{
-		// denominator of formula for line intersection
-		float denominator = LINE_INTERSECT_DENOM(p_line1, p_line2);
-		if(denominator == 0)
+		lineIntersection_t intersect;
+		linesIntersect(p_line1, p_line2, intersect);
+		if(!intersect.collide)
 			return false;
-		// factor to calculate resulting point
-		float u1 = LINE1_INTERSECT_FAC(p_line1, p_line2) / denominator;
-		
+			
+		calculateLineIntersectionFactor(p_line1, p_line2, intersect);
 		// add intersection point
-		p_intersectionPoints.push_back(p_line1.point1 + (u1 * (p_line1.point2 - p_line1.point1)));
+		p_intersectionPoints.push_back(p_line1.point1 + (intersect.u1 * (p_line1.point2 - p_line1.point1)));
 		return true;
+	}
+	
+/*************************************************
+ * Collide Linesegments
+ *************************************************/
+	
+	static void calculateLineSegmentIntersectionFactors(const Line &p_line1, const Line &p_line2, lineIntersection_t &p_result)
+	{
+		calculateLineIntersectionFactor(p_line1, p_line2, p_result);
+		// factor to calculate resulting point with line 2
+		p_result.u2 = LINE2_INTERSECT_FAC(p_line1, p_line2) / p_result.denominator;
+					   
+		// intersection point is in between points of lines
+		p_result.collide = p_result.u1 >= 0 && p_result.u1 <= 1 && p_result.u2 >= 0 && p_result.u2 <= 1;
+	}
+	
+	bool collideLineSegments(const Line &p_line1, const Line &p_line2)
+	{
+		std::vector<Vec2> tmp;
+		return collideLineSegments(p_line1, p_line2, tmp);
 	}
 	
 	bool collideLineSegments(const Line &p_line1, const Line &p_line2, std::vector<Vec2> &p_intersectionPoints)
 	{
-		// denominator of formula for line intersection
-		float denominator = LINE_INTERSECT_DENOM(p_line1, p_line2);
-		if(denominator == 0)
+		lineIntersection_t intersect;
+		linesIntersect(p_line1, p_line2, intersect);
+		if(!intersect.collide)
 			return false;
-		// factor to calculate resulting point
-		float u1 = LINE1_INTERSECT_FAC(p_line1, p_line2) / denominator;
-		float u2 = LINE2_INTERSECT_FAC(p_line1, p_line2) / denominator;
-		
-		// intersection point is not in between points of lines
-		if (u1 < 0 || u1 > 1 || u2 < 0 || u2 > 1)
+			
+		calculateLineSegmentIntersectionFactors(p_line1, p_line2, intersect);
+		if (!intersect.collide)
 			return false;
 			
 		// add intersection point
-		p_intersectionPoints.push_back(p_line1.point1 + (u1 * (p_line1.point2 - p_line1.point1)));
+		p_intersectionPoints.push_back(p_line1.point1 + (intersect.u1 * (p_line1.point2 - p_line1.point1)));
 		return true;
+	}
+	
+/*************************************************
+ * Collide Line Linesegment
+ *************************************************/
+	
+	static void calculateLineLineSegmentIntersectionFactor(const Line &p_line, const Line &p_lineSegment, lineIntersection_t &p_result)
+	{
+		calculateLineSegmentIntersectionFactors(p_line, p_lineSegment, p_result);
+		//check if point is on the line
+		p_result.collide = p_result.u2 >= 0 && p_result.u2 <= 1;
 	}
 	
 	bool collideLineLineSegment(const Line &p_line, const Line &p_lineSegment, std::vector<Vec2> &p_intersectionPoints)
 	{
-		// denominator of formula for line intersection
-		float denominator = LINE_INTERSECT_DENOM(p_line, p_lineSegment);
-		if(denominator == 0)
+		lineIntersection_t intersect;
+		linesIntersect(p_line, p_lineSegment, intersect);
+		if(!intersect.collide)
 			return false;
-		float u = LINE2_INTERSECT_FAC(p_line, p_lineSegment) / denominator;
+		
+		calculateLineLineSegmentIntersectionFactor(p_line, p_lineSegment, intersect);
 		
 		// intersection point is not in between points of lineSegment
-		if (u < 0 || u > 1)
+		if (!intersect.collide)
 			return false;
 			
 		// add intersection point
-		p_intersectionPoints.push_back(p_lineSegment.point1 + (u * (p_lineSegment.point2 - p_lineSegment.point1)));
+		p_intersectionPoints.push_back(p_lineSegment.point1 + (intersect.u2 * (p_lineSegment.point2 - p_lineSegment.point1)));
 		return true;
 	}
 	
-	bool collideLineCircle(const Line &p_line, const Circle &p_circle, std::vector<Vec2> &p_intersectionPoints)
+/*************************************************
+ * Collide Line Circle
+ *************************************************/
+	
+	typedef struct {
+		Vec2 P1P2;
+		float a;
+		float b;
+		float c;
+		float delta;
+		float u1;
+		float u2;
+		
+		bool collide;
+	} lineCircleIntersection_t;
+	
+	static void lineCircleIntersect(const Line &p_line, const Circle &p_circle, lineCircleIntersection_t &p_result)
 	{
 		Vec2 localPoint1 = p_line.point1 - p_circle.mid;
 		Vec2 localPoint2 = p_line.point2 - p_circle.mid;
 		// direction vector of the line
-		Vec2 diffP2P1 = localPoint2 - localPoint1;
+		p_result.P1P2 = localPoint2 - localPoint1;
 		
-		float a = LINE_CIRCLE_INTERSECT_FAC_A(diffP2P1);
-		float b = LINE_CIRCLE_INTERSECT_FAC_B(diffP2P1, localPoint1);
-		float c = LINE_CIRCLE_INTERSECT_FAC_C(localPoint1, p_circle.radius);
-		float delta = LINE_CIRCLE_INTERSECT_DELTA(a, b, c);
+		p_result.a = LINE_CIRCLE_INTERSECT_FAC_A(p_result.P1P2);
+		p_result.b = LINE_CIRCLE_INTERSECT_FAC_B(p_result.P1P2, localPoint1);
+		p_result.c = LINE_CIRCLE_INTERSECT_FAC_C(localPoint1, p_circle.radius);
+		p_result.delta = LINE_CIRCLE_INTERSECT_DELTA(p_result.a, p_result.b, p_result.c);
+		p_result .collide = p_result.delta >= 0;
+	}
+	
+	static void calculateLineCircleIntersectionFactors(const Line &p_line, const Circle &p_circle, lineCircleIntersection_t &p_result)
+	{
+		if(!p_result.collide)
+			return;
+		else if(p_result.delta == 0)
+			 p_result.u1 = -p_result.b / (2 * p_result.a);
+		else {
+			float sqrtDelta = sqrt(p_result.delta);
+			p_result.u1 = (-p_result.b + sqrtDelta) / (2 * p_result.a);
+			p_result.u2 = (-p_result.b - sqrtDelta) / (2 * p_result.a);
+		}
+	}
+	
+	bool collideLineCircle(const Line &p_line, const Circle &p_circle)
+	{
+		lineCircleIntersection_t intersect;
+		lineCircleIntersect(p_line, p_circle, intersect);
+		return intersect.collide;
+	}
+	
+	bool collideLineCircle(const Line &p_line, const Circle &p_circle, std::vector<Vec2> &p_intersectionPoints)
+	{
+		lineCircleIntersection_t intersect;
+		lineCircleIntersect(p_line, p_circle, intersect);
+	
 		//no intersection
-		if (delta < 0)
+		if (!intersect.collide)
 			return false;
+			
+		calculateLineCircleIntersectionFactors(p_line, p_circle, intersect);
 		// one intersection, tangent
-		else if (delta == 0) {
-			float u = -b / (2 * a);
-			p_intersectionPoints.push_back(p_line.point1 + (u * diffP2P1));
+		if (intersect.delta == 0) {
+			p_intersectionPoints.push_back(p_line.point1 + (intersect.u1 * intersect.P1P2));
 		//two intersections
 		} else {
-			float sqrtDelta = sqrt(delta);
-			float u1 = (-b + sqrtDelta) / (2 * a);
-			float u2 = (-b - sqrtDelta) / (2 * a);
-			
-			p_intersectionPoints.push_back(p_line.point1 + (u1 * diffP2P1));
-			p_intersectionPoints.push_back(p_line.point1 + (u2 * diffP2P1));
+			p_intersectionPoints.push_back(p_line.point1 + (intersect.u1 * intersect.P1P2));
+			p_intersectionPoints.push_back(p_line.point1 + (intersect.u2 * intersect.P1P2));
 		}
 		
 		return true;
 	}
 	
+/*************************************************
+ * Collide Line Circle
+ *************************************************/	
+	
+	static void calculateLineSegmentCircleIntersectionFactors(const Line &p_lineSegment, const Circle &p_circle,  lineCircleIntersection_t &p_result)
+	{
+		
+		calculateLineCircleIntersectionFactors(p_lineSegment, p_circle, p_result);
+		if(!p_result.collide)
+			return;
+		else if(p_result.delta == 0)
+			p_result.collide = p_result.u1 >= 0 && p_result.u2 <= 1;
+		else
+			p_result.collide = (p_result.u1 >= 0  && p_result.u1 <= 1) || (p_result.u2 >= 0 && p_result.u2 <= 1);
+	}
+	
+	bool collideLineSegmentCircle(const Line &p_line, const Circle &p_circle)
+	{
+		return collideLineSegmentCircle(p_line, p_circle);
+	}
+	
 	bool collideLineSegmentCircle(const Line &p_line, const Circle &p_circle, std::vector<Vec2> &p_intersectionPoints)
 	{
-		Vec2 localPoint1 = p_line.point1 - p_circle.mid;
-		Vec2 localPoint2 = p_line.point2 - p_circle.mid;
-		// direction vector of the line
-		Vec2 diffP2P1 = localPoint2 - localPoint1;
-		
-		float a = LINE_CIRCLE_INTERSECT_FAC_A(diffP2P1);
-		float b = LINE_CIRCLE_INTERSECT_FAC_B(diffP2P1, localPoint1);
-		float c = LINE_CIRCLE_INTERSECT_FAC_C(localPoint1, p_circle.radius);
-		float delta = LINE_CIRCLE_INTERSECT_DELTA(a, b, c);
+		lineCircleIntersection_t intersect;
+		lineCircleIntersect(p_line, p_circle, intersect);
+	
 		//no intersection
-		if (delta < 0)
+		if (!intersect.collide)
 			return false;
+			
+		calculateLineSegmentCircleIntersectionFactors(p_line, p_circle, intersect);
+		//is not on line segment
+		if (!intersect.collide)
+			return false;
+		
 		// one intersection, tangent
-		else if (delta == 0) {
-			float u = -b / (2 * a);
-			// is not on the line segment
-			if(u < 0 || u > 1)
-				return false;
-			else {
-				p_intersectionPoints.push_back(p_line.point1 + (u * diffP2P1));
-				return true;
-			}
+		else if (intersect.delta == 0) {
+			p_intersectionPoints.push_back(p_line.point1 + (intersect.u1 * intersect.P1P2));
 		//two intersections
 		} else {
-			float sqrtDelta = sqrt(delta);
-			float u1 = (-b + sqrtDelta) / (2 * a);
-			float u2 = (-b - sqrtDelta) / (2 * a);
-			
-			if((u1 < 0  || u1 > 1) && (u2 < 0 || u2 > 1))
-				return false;
-			
-			if(u1 >= 0  && u1 <= 1)
-				p_intersectionPoints.push_back(p_line.point1 + (u1 * diffP2P1));
-			if(u2 >= 0  && u2 <= 1)
-				p_intersectionPoints.push_back(p_line.point1 + (u2 * diffP2P1));
-			return true;
+			if(intersect.u1 >= 0  && intersect.u1 <= 1)
+				p_intersectionPoints.push_back(p_line.point1 + (intersect.u1 * intersect.P1P2));
+			if(intersect.u2 >= 0  && intersect.u2 <= 1)
+				p_intersectionPoints.push_back(p_line.point1 + (intersect.u2 * intersect.P1P2));
 		}
 		
 		return true;
