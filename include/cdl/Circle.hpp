@@ -1,3 +1,6 @@
+/* The Circle class represents a cricle shape in CDL. It provides a Vec2 as Mid
+ * and a radius. */
+
 #ifndef CDL_CIRCLE_HPP
 #define CDL_CIRCLE_HPP
 

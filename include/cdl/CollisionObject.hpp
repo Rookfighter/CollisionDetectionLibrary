@@ -1,3 +1,10 @@
+/* The CollisionObject is the common representation of a 2 dimensional
+ * object in CDL. It consists of a list of polygons and a list of circles.
+ * The positions of the circles and polygons are relative to the position
+ * of the object.
+ * The userData field can be used to store any additional data in the
+ * CollisionObject. */
+
 #ifndef CDL_COLLISION_OBJECT_HPP
 #define CDL_COLLISION_OBJECT_HPP
 

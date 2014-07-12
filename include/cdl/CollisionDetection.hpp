@@ -1,3 +1,8 @@
+/* The CollisionDetection component of CDL provides functions to calculate collisions
+ * between various 2 dimensional objects.
+ * Every function returns true if a collision happened. In this case the intersection points
+ * are stored in the vector given as last argument. */
+ 
 #ifndef CDL_COLLISION_DETECTION_HPP
 #define CDL_COLLISION_DETECTION_HPP
 
