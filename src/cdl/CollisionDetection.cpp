@@ -22,10 +22,10 @@
 
 namespace cdl
 {
-	static void unique(std::vector<Vec2> p_points)
+	static void unique(std::vector<Vec2> &p_points)
 	{
 		for(int i = 0; i < p_points.size(); ++i) {
-			for(int j = i; j < p_points.size(); ++j) {
+			for(int j = i + 1; j < p_points.size(); ++j) {
 				if(p_points[i] == p_points[j]) {
 					p_points.erase(p_points.begin() + j);
 					--j;

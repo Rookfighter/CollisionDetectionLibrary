@@ -1,4 +1,5 @@
 #include <cmath>
+#include <sstream>
 #include "cdl/Vec2.hpp"
 
 namespace cdl
@@ -54,6 +55,14 @@ namespace cdl
 		y /= p_divisor;
 		
 		return *this;
+	}
+	
+	std::string Vec2::str() const
+	{
+		std::stringstream ss;
+		ss.precision(2);
+		ss << "(" << x << ";" << y << ")";
+		return ss.str();
 	}
 	
 	const Vec2 operator+(Vec2 const& p_vec1, Vec2 const& p_vec2)

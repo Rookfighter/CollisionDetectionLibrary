@@ -1,6 +1,8 @@
 #ifndef CDL_VEC2_HPP
 #define CDL_VEC2_HPP
 
+#include <string>
+
 namespace cdl
 {
 	/* This class implements a 2D vector. It provides mathematical operators for adding,
@@ -24,6 +26,8 @@ namespace cdl
 		Vec2& operator-=(Vec2 const& p_vec);
 		Vec2& operator*=(const float p_factor);
 		Vec2& operator/=(const float p_divisor);
+		
+		std::string str() const;
 	};
 	
 	const Vec2 operator+(Vec2 const& p_vec1, Vec2 const& p_vec2);

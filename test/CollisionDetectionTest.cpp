@@ -303,7 +303,7 @@ SUITE(CollisionDetection)
 		
 		for(int i = 0; i < p2.corners.size(); ++i)
 			p2.corners[i] += cdl::Vec2(-3, 1);
-			
+		
 		intersectionPoints.clear();
 		ret = cdl::collidePolygons(p1, p2, intersectionPoints);
 		//polygons should collide in 2 points
