@@ -308,6 +308,6 @@ SUITE(CollisionDetection)
 		ret = cdl::collidePolygons(p1, p2, intersectionPoints);
 		//polygons should collide in 2 points
 		CHECK(ret);
-		//CHECK(intersectionPoints.size() == 2);
+		CHECK(intersectionPoints.size() == 2);
 	}
 }

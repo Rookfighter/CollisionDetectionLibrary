@@ -8,13 +8,6 @@
 
 namespace cdl
 {
-	bool collideCircles(const Circle &p_circle1, const Circle &p_circle2);
-	bool collideLines(const Line &p_line1, const Line &p_line2);
-	bool collideLineSegments(const Line &p_line1, const Line &p_line2);
-	bool collideLineLineSegment(const Line &p_line, const Line &p_lineSegment);
-	bool collideLineCircle(const Line &p_line, const Circle &p_circle);
-	bool collideLineSegmentCircle(const Line &p_line, const Circle &p_circle);
-	
 	bool collideCircles(const Circle &p_circle1, const Circle &p_circle2, std::vector<Vec2> &p_intersectionPoints);
 	bool collideLines(const Line &p_line1, const Line &p_line2, std::vector<Vec2> &p_intersectionPoints);
 	bool collideLineSegments(const Line &p_line1, const Line &p_line2, std::vector<Vec2> &p_intersectionPoints);
