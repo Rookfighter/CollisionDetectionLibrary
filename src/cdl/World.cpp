@@ -45,37 +45,55 @@ namespace cdl
 		}
 	}
 	
-	// TODO shapes of objects use relative positions!
 	void World::collideObjects(CollisionObject *p_objectA, CollisionObject *p_objectB) {
 		bool collided = false;
 		std::vector<Vec2> intersectionPoints;
 		
+		std::vector<Circle> circlesA(p_objectA->circles());
+		std::vector<Circle> circlesB(p_objectB->circles());
+		std::vector<Polygon> polygonsA(p_objectA->polygons());
+		std::vector<Polygon> polygonsB(p_objectB->polygons());
+		
+		// positions of circles and polygons are only reltaive, calculate abs positions
+		for(int i = 0; i < circlesA.size(); ++i)
+			circlesA[i].mid += p_objectA->position;
+		for(int i = 0; i < circlesB.size(); ++i)
+			circlesB[i].mid += p_objectB->position;
+		for(int i = 0; i < polygonsA.size(); ++i) {
+			for(int j = 0; j < polygonsA[i].corners.size(); ++j)
+				polygonsA[i].corners[j] += p_objectA->position;
+		}
+		for(int i = 0; i < polygonsB.size(); ++i) {
+			for(int j = 0; j < polygonsB[i].corners.size(); ++j)
+				polygonsB[i].corners[j] += p_objectB->position;
+		}
+		
 		// check for all circles of A
-		for(int i = 0; i < p_objectA->circles.size(); ++i) {
+		for(int i = 0; i < circlesA.size(); ++i) {
 			// check for all circles of B
-			for(int j = 0; j < p_objectB->circles.size(); ++j) {
-				if(collideCircles(p_objectA->circles[i], p_objectB->circles[j], intersectionPoints))
+			for(int j = 0; j < circlesB.size(); ++j) {
+				if(collideCircles(circlesA[i], circlesB[j], intersectionPoints))
 					collided = true;
 			}
 			
 			// check for all polygons of B
-			for(int j = 0; j < p_objectB->polygons.size(); ++j) {
-				if(collideCirclePolygon(p_objectA->circles[i], p_objectB->polygons[j], intersectionPoints))
+			for(int j = 0; j < polygonsB.size(); ++j) {
+				if(collideCirclePolygon(circlesA[i], polygonsB[j], intersectionPoints))
 					collided = true;
 			}
 		}
 		
 		// check for all polygons of A
-		for(int i = 0; i < p_objectA->polygons.size(); ++i) {
+		for(int i = 0; i < polygonsA.size(); ++i) {
 			// check for all circles of B
-			for(int j = 0; j < p_objectB->circles.size(); ++j) {
-				if(collideCirclePolygon(p_objectB->circles[j], p_objectA->polygons[i], intersectionPoints))
+			for(int j = 0; j < circlesB.size(); ++j) {
+				if(collideCirclePolygon(circlesB[j], polygonsA[i], intersectionPoints))
 					collided = true;
 			}
 			
 			// check for all polygons of B
-			for(int j = 0; j < p_objectB->polygons.size(); ++j) {
-				if(collidePolygons(p_objectA->polygons[i], p_objectB->polygons[j], intersectionPoints))
+			for(int j = 0; j < polygonsB.size(); ++j) {
+				if(collidePolygons(polygonsA[i], polygonsB[j], intersectionPoints))
 					collided = true;
 			}
 		}

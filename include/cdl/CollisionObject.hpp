@@ -16,22 +16,29 @@ namespace cdl
 {
 	class CollisionObject
 	{
+	private:
+		std::vector<Polygon> polygonVec;
+		std::vector<Circle> circleVec;
+		float direction;
+		
+		void rotatePoint(Vec2 &p_point, float p_tanVal);
 	public:
 		void *userData;
-		std::vector<Polygon> polygons;
-		std::vector<Circle> circles;
 		Vec2 position;
 		Vec2 linearVelocity;
-		float directionRadian;
 		
-		CollisionObject() { }
 		CollisionObject(const std::vector<Polygon> &p_polygons)
-		:polygons(p_polygons), circles() { }
+		:polygonVec(p_polygons), circleVec() { }
 		CollisionObject(const std::vector<Circle> &p_circles)
-		:polygons(), circles(p_circles) { }
+		:polygonVec(), circleVec(p_circles) { }
 		CollisionObject(const std::vector<Polygon> &p_polygons, const std::vector<Circle> &p_circles)
-		:polygons(p_polygons), circles(p_circles) { }
+		:polygonVec(p_polygons), circleVec(p_circles) { }
 		~CollisionObject() { }
+		
+		void setDirection(float p_radian);
+		float getDirection() const;
+		const std::vector<Polygon>& polygons() const;
+		const std::vector<Circle>& circles() const;
 	};
 }
 
