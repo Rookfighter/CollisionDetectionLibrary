@@ -1,7 +1,6 @@
 #include <cmath>
 #include <algorithm>
 #include "cdl/CollisionDetection.hpp"
-#include "cdl/Utils.hpp"
 
 /* Formula of line intersection:
  * u1 = LINE1_INTERSECT_FAC(l1, l2) / LINE_INTERSECT_DENOM(l1, l2)

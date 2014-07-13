@@ -18,6 +18,14 @@ namespace cdl
 			delete p_object;
 	}
 	
+	void World::destroyAllObjects()
+	{
+		std::list<CollisionObject*>::iterator it;
+		for(it = objects.begin(); it != objects.end(); ++it)
+			delete (*it);
+		objects.clear();
+	}
+	
 	void World::step(const float p_sec, const int p_iterations)
 	{
 		float iterationSec = p_sec / ((float) p_iterations);
@@ -99,10 +107,9 @@ namespace cdl
 		}
 		
 		if(collided) {
-			CollisionEvent event(intersectionPoints, *p_objectA, *p_objectB);
+			CollisionEvent event(intersectionPoints, p_objectA, p_objectB);
 			collisionHandler->collide(event);
 		}
-		
 	}
 	
 	void World::setCollisionHandler(CollisionHandler *p_collisionHandler)

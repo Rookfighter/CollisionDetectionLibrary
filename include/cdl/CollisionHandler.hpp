@@ -18,17 +18,17 @@ namespace cdl
 	{
 	private:
 		const std::vector<Vec2> &intersectionPoints;
-		CollisionObject &objectA;
-		CollisionObject &objectB;
+		CollisionObject *objectA;
+		CollisionObject *objectB;
 		
 	public:
-		CollisionEvent(const std::vector<Vec2> &p_intersectionPoints, CollisionObject &p_objectA, CollisionObject &p_objectB)
-		:intersectionPoints(p_intersectionPoints), objectA(p_objectA), objectB(p_objectA) { }
+		CollisionEvent(const std::vector<Vec2> &p_intersectionPoints, CollisionObject *p_objectA, CollisionObject *p_objectB)
+		:intersectionPoints(p_intersectionPoints), objectA(p_objectA), objectB(p_objectB) { }
 		~CollisionEvent() { }
 		
-		CollisionObject& getObjectA()
+		CollisionObject* getObjectA()
 		{return objectA;}
-		CollisionObject& getObjectB()
+		CollisionObject* getObjectB()
 		{return objectB;}
 		
 		const std::vector<Vec2>& getIntersectionPoints()

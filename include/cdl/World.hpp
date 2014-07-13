@@ -34,6 +34,7 @@ namespace cdl
 	
 		CollisionObject* createObject(const std::vector<Polygon> &p_polygons, const std::vector<Circle> &p_circles);
 		void destroyObject(CollisionObject* p_object);
+		void destroyAllObjects();
 		void step(const float p_sec, const int p_iterations);
 		
 		void setCollisionHandler(CollisionHandler *p_collisionHandler);

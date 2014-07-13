@@ -1,6 +1,5 @@
 #include <UnitTest++.h>
 #include <cdl/cdl.hpp>
-#include <cdl/Utils.hpp>
 #include <vector>
 
 SUITE(CollisionDetection)

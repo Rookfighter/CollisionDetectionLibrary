@@ -13,7 +13,7 @@ namespace cdl
 	{
 	public:
 		void collide(CollisionEvent &p_event)
-		{ p_event.getObjectA().linearVelocity.set(0,0); p_event.getObjectB().linearVelocity.set(0,0); }
+		{ p_event.getObjectA()->linearVelocity.set(0,0); p_event.getObjectB()->linearVelocity.set(0,0); }
 	};
 }
 

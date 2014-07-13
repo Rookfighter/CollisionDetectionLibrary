@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(cdl)
 
-get_filename_component(CDL_MODULES_PATH "./modules" ABSOLUTE) 
+get_filename_component(CDL_MODULES_PATH "./cmake-modules" ABSOLUTE) 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CDL_MODULES_PATH})
 find_package(UnitTest++)
 
