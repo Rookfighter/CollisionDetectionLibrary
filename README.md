@@ -4,5 +4,4 @@ Collision Detection Library (CDL) is a simple framework to calculate object coll
 
 UnitTest++ is used for unit testing.
 
-
-
+CMake expects UnitTest++ to be in the directory ```lib/UnitTest++```.
